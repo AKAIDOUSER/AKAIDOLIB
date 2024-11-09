@@ -96,7 +96,7 @@ function Library:CreateWindow(Options)
 			UiStroke = Color3.fromRGB(81, 81, 81)
 		},
 		["AKAIDO"] = {
-			Main = Color3.fromRGB(35, 35, 35),
+			Main = Color3.fromRGB(56, 0, 0),
 			Imagem = "http://www.roblox.com/asset/?id=71473639720364",
 			ImageColor = Color3.fromRGB(100, 100, 100),
 			UiStrokeMain = Color3.fromRGB(84, 0, 0),
@@ -1007,7 +1007,7 @@ function Library:CreateWindow(Options)
 
 	local onn = false
 
-	User.InputBegan:Connect(function(input, gpe)
+	User.MouseButton1Click:Connect(function()
 		onn = not onn
 		DropShadowHolder.Visible = true
 		userConfg:TweenSize(UDim2.new(0, 140, 0, 160), Back, Out, Time2, true)
@@ -1124,76 +1124,240 @@ function Library:CreateWindow(Options)
 	
 	local GUI = {}
 	
-	local Cam = workspace.CurrentCamera
-	local hotkey = true
+	local Notficationsholder = Instance.new("Frame")
+	local ScrollNotification = Instance.new("Frame")
+	local UIListLayout = Instance.new("UIListLayout")
+	local UIPadding = Instance.new("UIPadding")
 
-	_G.Aimbot = true
-	_G.AimbotButton = true
-	_G.TeamCheck = false
-	_G.TeamCheckType = "Enemies" -- Pode ser "All", "Friends" ou "Enemies"
-	_G.Part = "Head"
+	Notficationsholder.Name = "Notficationsholder"
+	Notficationsholder.Parent = MyLibrary
+	Notficationsholder.AnchorPoint = Vector2.new(1, 1)
+	Notficationsholder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Notficationsholder.BackgroundTransparency = 1.000
+	Notficationsholder.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Notficationsholder.BorderSizePixel = 0
+	Notficationsholder.Position = UDim2.new(1, 0, 1, 0)
+	Notficationsholder.Size = UDim2.new(0, 251, 0, 599)
 
-	_G.SafePlayer = nil
+	ScrollNotification.Name = "ScrollNotification"
+	ScrollNotification.Parent = Notficationsholder
+	ScrollNotification.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	ScrollNotification.BackgroundTransparency = 1.000
+	ScrollNotification.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	ScrollNotification.BorderSizePixel = 0
+	ScrollNotification.Size = UDim2.new(1, 0, 1, 0)
 
-	_G.WallCheck = false  -- Ativar/Desativar o WallCheck
+	UIListLayout.Parent = ScrollNotification
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+	UIListLayout.Padding = UDim.new(0, 3)
 
+	UIPadding.Parent = ScrollNotification
+	UIPadding.PaddingBottom = UDim.new(0, 5)
+	UIPadding.PaddingLeft = UDim.new(0, 5)
+	UIPadding.PaddingRight = UDim.new(0, 5)
+	UIPadding.PaddingTop = UDim.new(0, 5)
+	
+	function GUI:AddNotification(Options)
+		Options.Title = Options.Title or "Notification"
+		Options.Message = Options.Message or "No message provided"
+		Options.Icon = Options.Icon or "rbxassetid://10794085566"
+		Options.Type = Options.Type or "Default"
+		Options.Time = Options.Time or 5
+		
+		local Notification = {}
+		
+		local Notfication = Instance.new("Frame")
+		local TopBar = Instance.new("Frame")
+		local Line = Instance.new("Frame")
+		local Colors = Instance.new("Frame")
+		local R = Instance.new("Frame")
+		local UICorner = Instance.new("UICorner")
+		local UIListLayout_2 = Instance.new("UIListLayout")
+		local Y = Instance.new("Frame")
+		local UICorner_2 = Instance.new("UICorner")
+		local G = Instance.new("Frame")
+		local UICorner_3 = Instance.new("UICorner")
+		local Title = Instance.new("TextLabel")
+		local UIPadding_2 = Instance.new("UIPadding")
+		local UICorner_4 = Instance.new("UICorner")
+		local Contentholder = Instance.new("Frame")
+		local Content = Instance.new("TextLabel")
+		local UIPadding_3 = Instance.new("UIPadding")
 
-	local function lookAt(target, eye)
-		Cam.CFrame = CFrame.new(target, eye)
-	end
+		Notfication.Name = "Notfication"
+		Notfication.Parent = ScrollNotification
+		Notfication.BackgroundColor3 = Theme.Main
+		Notfication.BackgroundTransparency = 0.080
+		Notfication.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Notfication.BorderSizePixel = 0
+		Notfication.Position = UDim2.new(0, 0, 0.87775892, 0)
+		Notfication.Size = UDim2.new(1, 0, 0.0713073015, 30)
 
-	local function isPlayerVisible(player)
-		if not _G.WallCheck then
-			return true
+		TopBar.Name = "TopBar"
+		TopBar.Parent = Notfication
+		TopBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		TopBar.BackgroundTransparency = 1.000
+		TopBar.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		TopBar.BorderSizePixel = 0
+		TopBar.Size = UDim2.new(1, 0, 0, 25)
+
+		Line.Name = "Line"
+		Line.Parent = TopBar
+		Line.AnchorPoint = Vector2.new(0, 1)
+		Line.BackgroundColor3 = Theme.Lines
+		Line.BackgroundTransparency = 0.080
+		Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Line.BorderSizePixel = 0
+		Line.Position = UDim2.new(0, 0, 1, 0)
+		Line.Size = UDim2.new(1, 0, 0, 1)
+
+		Colors.Name = "Colors"
+		Colors.Parent = TopBar
+		Colors.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		Colors.BackgroundTransparency = 1.000
+		Colors.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Colors.BorderSizePixel = 0
+		Colors.Size = UDim2.new(0, 50, 1, 0)
+
+		R.Name = "R"
+		R.Parent = Colors
+		R.AnchorPoint = Vector2.new(0, 0.5)
+		R.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+		R.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		R.BorderSizePixel = 0
+		R.Position = UDim2.new(0, 0, 0.5, 0)
+		R.Size = UDim2.new(0, 9, 0, 9)
+
+		UICorner.Parent = R
+
+		UIListLayout_2.Parent = Colors
+		UIListLayout_2.FillDirection = Enum.FillDirection.Horizontal
+		UIListLayout_2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
+		UIListLayout_2.VerticalAlignment = Enum.VerticalAlignment.Center
+		UIListLayout_2.Padding = UDim.new(0, 7)
+
+		Y.Name = "Y"
+		Y.Parent = Colors
+		Y.AnchorPoint = Vector2.new(0, 0.5)
+		Y.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+		Y.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Y.BorderSizePixel = 0
+		Y.Position = UDim2.new(0, 0, 0.5, 0)
+		Y.Size = UDim2.new(0, 9, 0, 9)
+
+		UICorner_2.Parent = Y
+
+		G.Name = "G"
+		G.Parent = Colors
+		G.AnchorPoint = Vector2.new(0, 0.5)
+		G.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+		G.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		G.BorderSizePixel = 0
+		G.Position = UDim2.new(0, 0, 0.5, 0)
+		G.Size = UDim2.new(0, 9, 0, 9)
+
+		UICorner_3.Parent = G
+
+		Title.Name = "Title"
+		Title.Parent = TopBar
+		Title.AnchorPoint = Vector2.new(1, 0)
+		Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		Title.BackgroundTransparency = 1.000
+		Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Title.BorderSizePixel = 0
+		Title.Position = UDim2.new(1, 0, 0, 0)
+		Title.Size = UDim2.new(1, -70, 1, 0)
+		Title.Font = Font2
+		Title.Text = Options.Title
+		Title.TextColor3 = Theme.Text
+		Title.TextSize = 12.000
+		Title.TextWrapped = true
+		Title.TextXAlignment = Enum.TextXAlignment.Right
+
+		UIPadding_2.Parent = Title
+		UIPadding_2.PaddingRight = UDim.new(0, 7)
+
+		UICorner_4.CornerRadius = UDim.new(0, 5)
+		UICorner_4.Parent = Notfication
+
+		Contentholder.Name = "Contentholder"
+		Contentholder.Parent = Notfication
+		Contentholder.AnchorPoint = Vector2.new(0, 1)
+		Contentholder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		Contentholder.BackgroundTransparency = 1.000
+		Contentholder.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Contentholder.BorderSizePixel = 0
+		Contentholder.Position = UDim2.new(0, 0, 1, 0)
+		Contentholder.Size = UDim2.new(1, 0, 1, -25)
+
+		Content.Name = "Content"
+		Content.Parent = Contentholder
+		Content.AnchorPoint = Vector2.new(1, 0)
+		Content.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		Content.BackgroundTransparency = 1.000
+		Content.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Content.BorderSizePixel = 0
+		Content.Position = UDim2.new(1, 0, 0, 0)
+		Content.Size = UDim2.new(1, 0, 1, 0)
+		Content.Font = Font1
+		Content.Text = Options.Message
+		Content.TextColor3 = Theme.Text
+		Content.TextSize = 12.000
+		Content.TextWrapped = true
+		Content.TextXAlignment = Enum.TextXAlignment.Left
+		Content.TextYAlignment = Enum.TextYAlignment.Top
+
+		UIPadding_3.Parent = Content
+		UIPadding_3.PaddingLeft = UDim.new(0, 7)
+		UIPadding_3.PaddingTop = UDim.new(0, 2)
+
+		local DropShadowHolder1 = Instance.new("Frame")
+		local DropShadow = Instance.new("ImageLabel")
+
+		DropShadowHolder1.Name = "DropShadowHolder"
+		DropShadowHolder1.Parent = Notfication
+		DropShadowHolder1.BackgroundTransparency = 1.000
+		DropShadowHolder1.BorderSizePixel = 0
+		DropShadowHolder1.Size = UDim2.new(1, 0, 1, 0)
+		DropShadowHolder1.ZIndex = 0
+
+		DropShadow.Name = "DropShadow"
+		DropShadow.Parent = DropShadowHolder1
+		DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+		DropShadow.BackgroundTransparency = 1.000
+		DropShadow.BorderSizePixel = 0
+		DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+		DropShadow.Size = UDim2.new(1, 47, 1, 47)
+		DropShadow.ZIndex = 0
+		DropShadow.Image = "rbxassetid://6014261993"
+		DropShadow.ImageColor3 = Theme.Shadow
+		DropShadow.ImageTransparency = 0.500
+		DropShadow.ScaleType = Enum.ScaleType.Slice
+		DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
+		
+		Notfication.Size = UDim2.new(0, 0, 0, 72)
+		
+		Notfication:TweenSize(UDim2.new(1, 0, 0, 72), Back, Out, Time2, true)
+
+		local function endd()
+			DropShadow = false
+			Notfication:TweenSize(UDim2.new(0, 0, 0, 72), Back, Out, Time2, true)
+			wait(0.5)
+			TopBar.Visible = false
+			Contentholder.Visible = false
+			wait(0.5)
+			Notfication:Destroy()
 		end
 
-		local startPos = Cam.CFrame.p
-		local endPos = player.Character[_G.Part].Position
-		local direction = (endPos - startPos).unit * (endPos - startPos).magnitude
-		local ray = Ray.new(startPos, direction)
-		local ignoreList = {game.Players.LocalPlayer.Character}
-
-		local hitPart, hitPos = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
-
-		return hitPart == nil or hitPart:IsDescendantOf(player.Character) -- Retorna true se não houver obstruções
+		delay(Options.Time, function()
+			endd()
+		end)
+		
+		return Notification
 	end
-
-	local function getClosestVisiblePlayer(trg_part)
-		local nearest = nil
-		local last = math.huge
-		for _, player in pairs(game.Players:GetPlayers()) do
-			if player ~= game.Players.LocalPlayer and player.Name ~= _G.SafePlayer and player.Character and player.Character:FindFirstChild(trg_part) then
-				local ePos, vis = workspace.CurrentCamera:WorldToViewportPoint(player.Character[trg_part].Position)
-				local AccPos = Vector2.new(ePos.x, ePos.y)
-				local mousePos = Vector2.new(workspace.CurrentCamera.ViewportSize.x / 2, workspace.CurrentCamera.ViewportSize.y / 2)
-				local distance = (AccPos - mousePos).magnitude
-				if distance < last and vis and hotkey and distance < 400 then
-					if distance < _G.FovRadius then
-						if _G.TeamCheck and player.Team ~= game.Players.LocalPlayer.Team then
-							if isPlayerVisible(player) then -- Verifica se o jogador está visível
-								last = distance
-								nearest = player
-							end
-						elseif not _G.TeamCheck then
-							if isPlayerVisible(player) then -- Verifica se o jogador está visível
-								last = distance
-								nearest = player
-							end
-						end
-					end
-				end
-			end
-		end
-		return nearest
-	end
-
-	game:GetService("RunService").RenderStepped:Connect(function()
-		local closest = getClosestVisiblePlayer(_G.Part)
-
-		if _G.Aimbot and closest and closest.Character:FindFirstChild(_G.Part) then
-			lookAt(Cam.CFrame.p, closest.Character:FindFirstChild(_G.Part).Position)
-		end
-	end)
 	
 	function GUI:AddTab(Options)
 		Options.Title = Options.Title or "Preview Tab"
@@ -1324,7 +1488,7 @@ function Library:CreateWindow(Options)
 		end)
 
 		-- Detectar clique com InputBegan
-		Inactive.InputBegan:Connect(function(input, gpe)
+		Inactive.MouseButton1Click:Connect(function()
 			if Tab.Hover then
 				Tab:Activate()
 			end
@@ -2406,7 +2570,7 @@ function Library:CreateWindow(Options)
 		
 		function Tab:AddEditText(Options)
 			Options.Title = Options.Title or "EditText"
-			Options.Default = Options.Default or "AKAIDO"
+			Options.Default = Options.Default or "Test"
 			Options.Callback = Options.Callback or function() end
 
 			local EditText = {}
@@ -3948,11 +4112,11 @@ end
 
 local Main = Library:CreateWindow({
 	Title = "AKAIDO|LIB",
-	Theme = "AKAIDO",
-	Mobile = true,
-	Animation = true,
+	Theme = "Darker",
+	Mobile = false,
+	Animation = false,
 	Opacity = false,
-	WallPaper = true
+	WallPaper = false
 })
 
 local Page = Main:AddPage({})
@@ -3964,7 +4128,11 @@ local tst = Page:AddSection({
 })
 
 tst:AddToggle({})
-tst:AddButton({})
+tst:AddButton({
+	Callback = function()
+		Main:AddNotification({})
+	end
+})
 tst:AddSlider({})
 tst:AddDropdown({})
 tst:AddKeyBind({})
@@ -3972,11 +4140,17 @@ tst:AddInput({})
 tst:AddEditText({})
 
 tab:AddToggle({})
-tab:AddButton({})
+tab:AddButton({
+	Callback = function()
+		Main:AddNotification({})
+	end
+})
 tab:AddSlider({})
 tab:AddDropdown({})
 tab:AddKeyBind({})
 tab:AddInput({})
-tab:AddEditText()
+tab:AddEditText({})
+
+Main:AddNotification({})
 
 return Library
