@@ -5,13 +5,13 @@ local uis = game:GetService("UserInputService")
 
 local Library = {}
 
-
-
 function Library:CreateWindow(Options)
 	Options.Title = Options.Title or "Ui LIb"
+	Options.Mobile = Options.Mobile or false
+	Options.KeyCode = Options.KeyCode or "K"
 	Options.Opacity = Options.Opacity or false
 	Options.Animation = Options.Animation or false
-	Options.TitleAnimation = Options.TitleAnimation or "AKAIDOHub"
+	Options.TitleAnimation = Options.TitleAnimation or "AKAIDO UI LIB"
 	Options.Theme = Options.Theme or "Darker"
 	Options.WallPaper  = Options.WallPaper or true
 	
@@ -19,6 +19,7 @@ function Library:CreateWindow(Options)
 	local Out = Enum.EasingStyle.Quad
 	local Time1 = 0.5
 	local Time2 = 0.8
+	local Position = UDim2.new(0.5, -1555, 0.5, 0)
 	
 	local Font1 = Enum.Font.Ubuntu
 	local Font2 = Enum.Font.Michroma
@@ -194,7 +195,7 @@ function Library:CreateWindow(Options)
 	Main.BorderSizePixel = 0
 	Main.Active = true
 	Main.Draggable = true
-	Main.Position = UDim2.new(0.486122519, 0, 0.5, 0)
+	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Main.Size = UDim2.new(0, 467, 0, 300)
 	Main.Image = Theme.Imagem
 	Main.ImageColor3 = Theme.ImageColor
@@ -212,7 +213,7 @@ function Library:CreateWindow(Options)
 	if Options.WallPaper == true then
 		Main.Image = Theme.Imagem
 	else
-		Theme.Imagem = ""
+		Main.Image = ""
 	end
 	
 	local function Animation()
@@ -332,6 +333,73 @@ function Library:CreateWindow(Options)
 	end
 
 	Animation()
+	
+	local On = false
+
+	if Options.Mobile == false then
+		uis.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+
+			if input.KeyCode == Enum.KeyCode[Options.KeyCode] then
+				On = not On
+				Main:TweenPosition(Position, Back, Out, Time2, true)
+				if On == false then
+					Main:TweenPosition(UDim2.new(0.5, 0, 0.5, 0), Back, Out, Time2, true)
+				end
+			end
+		end)
+	else
+		local OpenMobile = Instance.new("TextButton")
+		local UICorner = Instance.new("UICorner")
+		local DropShadowHolder = Instance.new("Frame")
+		local DropShadow = Instance.new("ImageLabel")
+
+		OpenMobile.Name = "OpenMobile"
+		OpenMobile.Parent = MyLibrary
+		OpenMobile.BackgroundColor3 = Theme.Main
+		OpenMobile.BackgroundTransparency = 0.080
+		OpenMobile.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		OpenMobile.BorderSizePixel = 0
+		OpenMobile.Position = UDim2.new(0.01, 0,0.013, 0)
+		OpenMobile.Size = UDim2.new(0, 82, 0, 25)
+		OpenMobile.AutoButtonColor = false
+		OpenMobile.Font = Font3
+		OpenMobile.Text = "Menu"
+		OpenMobile.TextColor3 = Theme.Text
+		OpenMobile.TextSize = 14.000
+
+		UICorner.CornerRadius = UDim.new(0, 5)
+		UICorner.Parent = OpenMobile
+
+		DropShadowHolder.Name = "DropShadowHolder"
+		DropShadowHolder.Parent = OpenMobile
+		DropShadowHolder.BackgroundTransparency = 1.000
+		DropShadowHolder.BorderSizePixel = 0
+		DropShadowHolder.Size = UDim2.new(1, 0, 1, 0)
+		DropShadowHolder.ZIndex = 0
+
+		DropShadow.Name = "DropShadow"
+		DropShadow.Parent = DropShadowHolder
+		DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+		DropShadow.BackgroundTransparency = 1.000
+		DropShadow.BorderSizePixel = 0
+		DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+		DropShadow.Size = UDim2.new(1, 34, 1, 34)
+		DropShadow.ZIndex = 0
+		DropShadow.Image = "rbxassetid://6014261993"
+		DropShadow.ImageColor3 = Theme.Shadow
+		DropShadow.ImageTransparency = 0.500
+		DropShadow.ScaleType = Enum.ScaleType.Slice
+		DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)	
+
+		OpenMobile.MouseButton1Click:Connect(function()
+			On = not On
+			Main:TweenPosition(Position, Back, Out, Time2, true)
+			if On == false then
+				Main:TweenPosition(UDim2.new(0.5, 0, 0.5, 0), Back, Out, Time2, true)
+			end
+		end)
+	end
 	
 	DropShadowHolder.Name = "DropShadowHolder"
 	DropShadowHolder.Parent = Main
@@ -1055,211 +1123,6 @@ function Library:CreateWindow(Options)
 	end
 	
 	local GUI = {}
-	
-	local speeds = 1
-	local speaker = game:GetService("Players").LocalPlayer
-	local chr = game.Players.LocalPlayer.Character
-	local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-
-	local nowe = false
-
-		if nowe == true then
-			nowe = false
-
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,true)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,true)
-			speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
-		else 
-			nowe = true
-
-
-
-			for i = 1, speeds do
-				spawn(function()
-
-					local hb = game:GetService("RunService").Heartbeat	
-
-
-					tpwalking = true
-					local chr = game.Players.LocalPlayer.Character
-					local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-					while tpwalking and hb:Wait() and chr and hum and hum.Parent do
-						if hum.MoveDirection.Magnitude > 0 then
-							chr:TranslateBy(hum.MoveDirection)
-						end
-					end
-
-				end)
-			end
-			game.Players.LocalPlayer.Character.Animate.Disabled = true
-			local Char = game.Players.LocalPlayer.Character
-			local Hum = Char:FindFirstChildOfClass("Humanoid") or Char:FindFirstChildOfClass("AnimationController")
-
-			for i,v in next, Hum:GetPlayingAnimationTracks() do
-				v:AdjustSpeed(0)
-			end
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,false)
-			speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,false)
-			speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
-		end
-
-
-
-
-		if game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid").RigType == Enum.HumanoidRigType.R6 then
-
-
-
-			local plr = game.Players.LocalPlayer
-			local torso = plr.Character.Torso
-			local flying = true
-			local deb = true
-			local ctrl = {f = 0, b = 0, l = 0, r = 0}
-			local lastctrl = {f = 0, b = 0, l = 0, r = 0}
-			local maxspeed = 50
-			local speed = 0
-
-
-			local bg = Instance.new("BodyGyro", torso)
-			bg.P = 9e4
-			bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-			bg.cframe = torso.CFrame
-			local bv = Instance.new("BodyVelocity", torso)
-			bv.velocity = Vector3.new(0,0.1,0)
-			bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-			if nowe == true then
-				plr.Character.Humanoid.PlatformStand = true
-			end
-			while nowe == true or game:GetService("Players").LocalPlayer.Character.Humanoid.Health == 0 do
-				game:GetService("RunService").RenderStepped:Wait()
-
-				if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
-					speed = speed+.5+(speed/maxspeed)
-					if speed > maxspeed then
-						speed = maxspeed
-					end
-				elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
-					speed = speed-1
-					if speed < 0 then
-						speed = 0
-					end
-				end
-				if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
-					bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-					lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
-				elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
-					bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-				else
-					bv.velocity = Vector3.new(0,0,0)
-				end
-				--	game.Players.LocalPlayer.Character.Animate.Disabled = true
-				bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxspeed),0,0)
-			end
-			ctrl = {f = 0, b = 0, l = 0, r = 0}
-			lastctrl = {f = 0, b = 0, l = 0, r = 0}
-			speed = 0
-			bg:Destroy()
-			bv:Destroy()
-			plr.Character.Humanoid.PlatformStand = false
-			game.Players.LocalPlayer.Character.Animate.Disabled = false
-			tpwalking = false
-
-
-
-
-		else
-			local plr = game.Players.LocalPlayer
-			local UpperTorso = plr.Character.UpperTorso
-			local flying = true
-			local deb = true
-			local ctrl = {f = 0, b = 0, l = 0, r = 0}
-			local lastctrl = {f = 0, b = 0, l = 0, r = 0}
-			local maxspeed = 50
-			local speed = 0
-
-
-			local bg = Instance.new("BodyGyro", UpperTorso)
-			bg.P = 9e4
-			bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-			bg.cframe = UpperTorso.CFrame
-			local bv = Instance.new("BodyVelocity", UpperTorso)
-			bv.velocity = Vector3.new(0,0.1,0)
-			bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-			if nowe == true then
-				plr.Character.Humanoid.PlatformStand = true
-			end
-			while nowe == true or game:GetService("Players").LocalPlayer.Character.Humanoid.Health == 0 do
-				wait()
-
-				if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
-					speed = speed+.5+(speed/maxspeed)
-					if speed > maxspeed then
-						speed = maxspeed
-					end
-				elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
-					speed = speed-1
-					if speed < 0 then
-						speed = 0
-					end
-				end
-				if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
-					bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-					lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
-				elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
-					bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-				else
-					bv.velocity = Vector3.new(0,0,0)
-				end
-
-				bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxspeed),0,0)
-			end
-			ctrl = {f = 0, b = 0, l = 0, r = 0}
-			lastctrl = {f = 0, b = 0, l = 0, r = 0}
-			speed = 0
-			bg:Destroy()
-			bv:Destroy()
-			plr.Character.Humanoid.PlatformStand = false
-			game.Players.LocalPlayer.Character.Animate.Disabled = false
-			tpwalking = false
-
-
-
-		end
-
-	game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
-		wait(0.7)
-		game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
-		game.Players.LocalPlayer.Character.Animate.Disabled = false
-
-	end)
-
-
 	
 	local Cam = workspace.CurrentCamera
 	local hotkey = true
@@ -2541,126 +2404,6 @@ function Library:CreateWindow(Options)
 
 
 			return KeyBind
-		end
-
-		function Tab:AddFlyBt(Options)
-			Options.Title = Options.Title or "Fly Button"
-			Options.Default = Options.Default or false
-
-			local FLY = {}
-			local OnOrOff = Options.Default
-
-			local Fly = Instance.new("Frame")
-			local UICorner = Instance.new("UICorner")
-			local UIPadding = Instance.new("UIPadding")
-			local Title = Instance.new("TextLabel")
-			local UIPadding_2 = Instance.new("UIPadding")
-			local Icon = Instance.new("ImageLabel")
-			local View = Instance.new("Frame")
-			local UICorner_2 = Instance.new("UICorner")
-
-			Fly.Name = "Fly"
-			Fly.Parent = NormalTab
-			Fly.Active = true
-			Fly.BackgroundColor3 = Theme.Options
-			Fly.BackgroundTransparency = 0.400
-			Fly.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Fly.BorderSizePixel = 0
-			Fly.Selectable = true
-			Fly.Size = UDim2.new(1, 0, 0, 27)
-
-			UICorner.CornerRadius = UDim.new(0, 5)
-			UICorner.Parent = Fly
-
-			UIPadding.Parent = Fly
-			UIPadding.PaddingLeft = UDim.new(0, 7)
-			UIPadding.PaddingRight = UDim.new(0, 7)
-
-			local s = Instance.new("UIStroke")
-			s.Parent = Fly
-			s.Color = Theme.UiStroke
-			s.Thickness = 0.8
-			s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-			Title.Name = "Title"
-			Title.Parent = Fly
-			Title.AnchorPoint = Vector2.new(0, 0.5)
-			Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Title.BackgroundTransparency = 1.000
-			Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Title.BorderSizePixel = 0
-			Title.Position = UDim2.new(0, 0, 0.5, 0)
-			Title.Size = UDim2.new(1, 0, 0, 20)
-			Title.Font = Font1
-			Title.Text = Options.Title
-			Title.TextColor3 = Theme.Text
-			Title.TextSize = 12.000
-			Title.TextXAlignment = Enum.TextXAlignment.Left
-
-			UIPadding_2.Parent = Title
-			UIPadding_2.PaddingLeft = UDim.new(0, 8)
-
-			Icon.Name = "Icon"
-			Icon.Parent = Title
-			Icon.AnchorPoint = Vector2.new(1, 0.5)
-			Icon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Icon.BackgroundTransparency = 1.000
-			Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Icon.BorderSizePixel = 0
-			Icon.Position = UDim2.new(1, 0, 0.5, 0)
-			Icon.Size = UDim2.new(0, 18, 0, 18)
-			Icon.Image = "rbxassetid://7743871002"
-			Icon.ImageColor3 = Theme.Image
-
-			View.Name = "View"
-			View.Parent = Title
-			View.AnchorPoint = Vector2.new(0, 0.5)
-			View.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			View.BorderSizePixel = 0
-			View.Position = UDim2.new(0, -11, 0.5, 0)
-			View.Size = UDim2.new(0, 7, 0, 19)
-
-			UICorner_2.CornerRadius = UDim.new(0, 5)
-			UICorner_2.Parent = View
-			
-			Fly:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
-			UpdateCanvasSize()
-
-			isFlying = Options.Default
-
-			if Options.Default == true then
-				View.BackgroundColor3 = Theme.TogglesActiveHolder
-			else
-				View.BackgroundColor3 = Theme.TogglesInactivelder
-			end
-
-			Title.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					OnOrOff = not OnOrOff
-					toggleFly()
-					View.BackgroundColor3 = Theme.TogglesActiveHolder
-					if OnOrOff == false then
-						View.BackgroundColor3 = Theme.TogglesInactivelder
-					end
-				end
-			end)
-
-			function FLY:EditFly(options)
-				options.Title = Options.Title
-				options.Keycode = options.Keycode
-				options.Speed = options.Speed
-
-				if options.Title then
-					Title.Text = options.Title
-				end
-				if options.Speed  then
-					speeds = options.Speed
-				end
-			end
-
-			return FLY
 		end
 		
 		return Tab
@@ -3995,121 +3738,6 @@ function Library:CreateWindow(Options)
 				return KeyBind
 			end
 			
-			function Section:AddFlyBt(Options)
-				Options.Title = Options.Title or "Fly Button"
-				Options.Default = Options.Default or false
-				
-				local FLY = {}
-				local OnOrOff = Options.Default
-
-				local Fly = Instance.new("Frame")
-				local UICorner = Instance.new("UICorner")
-				local UIPadding = Instance.new("UIPadding")
-				local Title = Instance.new("TextButton")
-				local UIPadding_2 = Instance.new("UIPadding")
-				local Icon = Instance.new("ImageLabel")
-				local View = Instance.new("Frame")
-				local UICorner_2 = Instance.new("UICorner")
-
-				Fly.Name = "Fly"
-				Fly.Parent = Scroll
-				Fly.Active = true
-				Fly.BackgroundColor3 = Theme.Options
-				Fly.BackgroundTransparency = 0.400
-				Fly.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Fly.BorderSizePixel = 0
-				Fly.Selectable = true
-				Fly.Size = UDim2.new(1, 0, 0, 27)
-
-				UICorner.CornerRadius = UDim.new(0, 5)
-				UICorner.Parent = Fly
-
-				UIPadding.Parent = Fly
-				UIPadding.PaddingLeft = UDim.new(0, 7)
-				UIPadding.PaddingRight = UDim.new(0, 7)
-				
-				local s = Instance.new("UIStroke")
-				s.Parent = Fly
-				s.Color = Theme.UiStroke
-				s.Thickness = 0.8
-				s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-				Title.Name = "Title"
-				Title.Parent = Fly
-				Title.AnchorPoint = Vector2.new(0, 0.5)
-				Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				Title.BackgroundTransparency = 1.000
-				Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Title.BorderSizePixel = 0
-				Title.Position = UDim2.new(0, 0, 0.5, 0)
-				Title.Size = UDim2.new(1, 0, 0, 20)
-				Title.AutoButtonColor = false
-				Title.Font = Font1
-				Title.Text = Options.Title
-				Title.TextColor3 = Theme.Text
-				Title.TextSize = 12.000
-				Title.TextXAlignment = Enum.TextXAlignment.Left
-
-				UIPadding_2.Parent = Title
-				UIPadding_2.PaddingLeft = UDim.new(0, 8)
-
-				Icon.Name = "Icon"
-				Icon.Parent = Title
-				Icon.AnchorPoint = Vector2.new(1, 0.5)
-				Icon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				Icon.BackgroundTransparency = 1.000
-				Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Icon.BorderSizePixel = 0
-				Icon.Position = UDim2.new(1, 0, 0.5, 0)
-				Icon.Size = UDim2.new(0, 18, 0, 18)
-				Icon.Image = "rbxassetid://7743871002"
-				Icon.ImageColor3 = Theme.Image
-
-				View.Name = "View"
-				View.Parent = Title
-				View.AnchorPoint = Vector2.new(0, 0.5)
-				View.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				View.BorderSizePixel = 0
-				View.Position = UDim2.new(0, -11, 0.5, 0)
-				View.Size = UDim2.new(0, 7, 0, 19)
-
-				UICorner_2.CornerRadius = UDim.new(0, 5)
-				UICorner_2.Parent = View
-				
-				Fly:GetPropertyChangedSignal("AbsoluteSize"):Connect(up)
-				up()
-				
-				View.BackgroundColor3 = Theme.TogglesInactivelder
-				
-				Title.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						OnOrOff = not OnOrOff
-						
-						View.BackgroundColor3 = Theme.TogglesActiveHolder
-						if OnOrOff == false then
-							View.BackgroundColor3 = Theme.TogglesInactivelder
-						end
-					end
-				end)
-				
-				function FLY:EditFly(options)
-					options.Title = Options.Title
-					options.Keycode = options.Keycode
-					options.Speed = options.Speed
-					
-					if options.Title then
-						Title.Text = options.Title
-					end
-					if options.Speed  then
-						speeds = options.Speed
-					end
-				end
-				
-				return FLY
-			end
-			
 			function Section:AddNoclipBt(Options)
 				Options.Title = Options.Title or "Preview Noclip"
 				Options.Default = Options.Default or false
@@ -4365,7 +3993,6 @@ function Library:CreateWindow(Options)
 					InputKey.TextSize = 11.000
 				end)
 
-
 				return EditText
 			end
 			
@@ -4381,6 +4008,7 @@ end
 local Main = Library:CreateWindow({
 	Title = "AKAIDO|LIB",
 	Theme = "AKAIDO",
+	Mobile = true,
 	Animation = true,
 	Opacity = false,
 	WallPaper = true
@@ -4402,17 +4030,11 @@ local Player = Page:AddSection({
 	Title = "Local Player",
 })
 
-local Aimbot = Main:AddAimbot({})
-
 SectionPage:AddToggle({
 	Title = "Aimbot",
 	Default = false,
 	Callback = function(Value)
 		print(Value)
-		Aimbot:AimbotConfig({
-			Aimbot = Value,
-			Fov = Value
-		})
 	end
 })
 
@@ -4465,16 +4087,11 @@ Visual:AddButton({
 	end
 })
 
-local fly = Player:AddFlyBt({})
-
 Player:AddInput({
 	Title = "Fly Speed",
 	Default = 100,
 	AddNumber = 1,
 	Callback = function(Value)
-		fly:EditFly({
-			Speed = Value
-		})
 	end
 })
 
@@ -4485,10 +4102,7 @@ Player:AddSlider({
 	Max = 200,
 	Default = 10,
 	Callback = function(Value)
-		fly:EditFly({
-			Speed = Value
-			
-		})
+
 	end
 })
 
@@ -4508,6 +4122,5 @@ local l = Main:AddLine({})
 
 tab:AddInput({})
 tab:AddKeyBind({})
-tab:AddFlyBt({})
 
 return Library
