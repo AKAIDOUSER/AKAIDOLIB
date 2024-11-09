@@ -1007,7 +1007,7 @@ function Library:CreateWindow(Options)
 
 	local onn = false
 
-	User.MouseButton1Click:Connect(function(input, gpe)
+	User.InputBegan:Connect(function(input, gpe)
 		onn = not onn
 		DropShadowHolder.Visible = true
 		userConfg:TweenSize(UDim2.new(0, 140, 0, 160), Back, Out, Time2, true)
@@ -1087,7 +1087,7 @@ function Library:CreateWindow(Options)
 	end
 
 	
-	X.MouseButton1Click:Connect(function(input, gpe)
+	X.InputBegan:Connect(function(input, gpe)
 		Search.Text = ""
 	end)
 	
@@ -1294,6 +1294,12 @@ function Library:CreateWindow(Options)
 		UIPadding_11.Parent = Title_2
 		UIPadding_11.PaddingLeft = UDim.new(0, 7)
 		
+		if uis.TouchEnabled then
+			NormalTab.ScrollBarThickness = 5
+		else
+			NormalTab.ScrollBarThickness = 0
+		end
+		
 		local function UpdateCanvasSize()
 			local contentSize = UIListLayout_5.AbsoluteContentSize
 			NormalTab.CanvasSize = UDim2.new(0, contentSize.X, 0, contentSize.Y + 10)
@@ -1318,7 +1324,7 @@ function Library:CreateWindow(Options)
 		end)
 
 		-- Detectar clique com InputBegan
-		Inactive.MouseButton1Click:Connect(function(input, gpe)
+		Inactive.InputBegan:Connect(function(input, gpe)
 			if Tab.Hover then
 				Tab:Activate()
 			end
@@ -1456,12 +1462,8 @@ function Library:CreateWindow(Options)
 			Button_3:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
 			UpdateCanvasSize()
 			
-			Title_8.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-				
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					Options.Callback()
-				end
+			Title_8.MouseButton1Click:Connect(function()
+				Options.Callback()
 			end)
 			
 			Search:GetPropertyChangedSignal("Text"):Connect(function()
@@ -1473,7 +1475,6 @@ function Library:CreateWindow(Options)
 					Tab:Deactivate()
 				end
 			end)
-
 			
 			return Button
 		end
@@ -1495,7 +1496,7 @@ function Library:CreateWindow(Options)
 			local Value_2 = Instance.new("TextBox")
 			local UIPadding_31 = Instance.new("UIPadding")
 			local UIPadding_32 = Instance.new("UIPadding")
-			local BackSlider_2 = Instance.new("Frame")
+			local BackSlider_2 = Instance.new("TextButton")
 			local UICorner_24 = Instance.new("UICorner")
 			local Draggable_2 = Instance.new("Frame")
 			local UICorner_25 = Instance.new("UICorner")
@@ -1566,6 +1567,8 @@ function Library:CreateWindow(Options)
 			BackSlider_2.BackgroundTransparency = 0.080
 			BackSlider_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			BackSlider_2.BorderSizePixel = 0
+			BackSlider_2.Text = ""
+			BackSlider_2.AutoButtonColor = false
 			BackSlider_2.Position = UDim2.new(0, 0, 0, 25)
 			BackSlider_2.Size = UDim2.new(1, 0, 0, 25)
 
@@ -1605,71 +1608,85 @@ function Library:CreateWindow(Options)
 			Slider_2:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
 			UpdateCanvasSize()
 			
-			local lastValue = nil  -- Armazena o último valor arredondado
-
 			-- Função para atualizar o valor do Slider
+			local lastValue = nil
+
 			local function UpdateSliderValue()
 				local sliderValue = math.clamp(Draggable_2.Size.X.Scale * (Options.Max - Options.Min) + Options.Min, Options.Min, Options.Max)
-				local roundedValue = math.floor(sliderValue)  -- Arredonda o valor
+				local roundedValue = math.floor(sliderValue)
 
 				-- Verifica se o valor arredondado mudou
 				if roundedValue ~= lastValue then
-					lastValue = roundedValue  -- Atualiza o último valor
-
-					Value_2.Text = roundedValue  -- Atualiza o texto com o valor arredondado
-					Options.Callback(roundedValue)  -- Chama o callback com o valor arredondado
+					lastValue = roundedValue
+					Value_2.Text = tostring(roundedValue)
+					Options.Callback(roundedValue)
 				end
 			end
 
-			-- Função para ajustar o tamanho do "Draggable" baseado em um novo tamanho
+			-- Função para ajustar o tamanho do "Draggable"
 			local function SetSliderSize(newSize)
-				local clampedSize = math.clamp(newSize, 0, 1)  -- Limitar o tamanho entre 0 e 1
+				local clampedSize = math.clamp(newSize, 0, 1)
 				Draggable_2.Size = UDim2.new(clampedSize, 0, 1, 0)
-				UpdateSliderValue()  -- Atualiza o valor do slider
+				UpdateSliderValue()
 			end
 
-			-- Eventos para interatividade do slider
+			-- Variáveis para controle de arrasto
 			local dragging = false
 			local startDragPosition = 0
 
-			BackSlider_2.InputBegan:Connect(function(input, gameProcessed)
-				if gameProcessed then return end
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					dragging = true
-					Main.Draggable = false
+			-- Função que lida com o início do arrasto (Clique ou Toque)
+			local function startDragging(input)
+				dragging = true
+				startDragPosition = (input.Position and input.Position.X) or input.Position.X -- Se input.Position estiver disponível (mouse), use, caso contrário, use input.Position.X (toque)
+			end
+
+			-- Função que lida com o movimento do arrasto
+			local function updateDragging(input)
+				if dragging then
+					local delta = input.Position.X - startDragPosition
+					local newSize = Draggable_2.Size.X.Scale + (delta / BackSlider_2.AbsoluteSize.X)
+					SetSliderSize(newSize)
 					startDragPosition = input.Position.X
 				end
-			end)
+			end
 
-			-- Atualiza o tamanho do "Draggable" enquanto arrasta
-			game:GetService("UserInputService").InputChanged:Connect(function(input)
-				if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-					local delta = input.Position.X - startDragPosition  -- Distância do movimento
-					local newSize = Draggable_2.Size.X.Scale + (delta / BackSlider_2.AbsoluteSize.X)  -- Calcula o novo tamanho
-					SetSliderSize(newSize)  -- Atualiza o tamanho do Draggable
-					startDragPosition = input.Position.X  -- Atualiza a posição inicial para o próximo cálculo
-				end
-			end)
-
-			-- Para de arrastar quando o botão do mouse é liberado
-			game:GetService("UserInputService").InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			-- Função que lida com o fim do arrasto
+			local function stopDragging(input)
+				if dragging then
 					dragging = false
-					Main.Draggable = true
+				end
+			end
+
+			-- Conexões para eventos de entrada (mouse e toque)
+			BackSlider_2.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					startDragging(input)
 				end
 			end)
 
+			-- Atualiza a posição durante o arrasto (mouse ou toque)
+			game:GetService("UserInputService").InputChanged:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+					updateDragging(input)
+				end
+			end)
+
+			-- Finaliza o arrasto quando o botão do mouse ou o toque é liberado
+			game:GetService("UserInputService").InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					stopDragging(input)
+				end
+			end)
+
+			-- Função que é chamada quando o valor do TextBox é alterado
 			Value_2.FocusLost:Connect(function(enterPressed)
 				if enterPressed then
-					-- Remove caracteres não numéricos e mantém apenas números
 					local newText = Value_2.Text:gsub("[^%d]", "")
 					local numberValue = tonumber(newText)
 
-					-- Se a entrada não for um número, defina como o mínimo
 					if not numberValue then
 						numberValue = Options.Min
 					else
-						-- Verifica os limites e ajusta o valor
 						if numberValue < Options.Min then
 							numberValue = Options.Min
 						elseif numberValue > Options.Max then
@@ -1677,30 +1694,18 @@ function Library:CreateWindow(Options)
 						end
 					end
 
-					-- Atualiza o texto do valor
 					Value_2.Text = tostring(numberValue)
 
-					-- Cálculo do tamanho do slider, garantindo que o valor esteja correto
 					local newSize = (numberValue - Options.Min) / (Options.Max - Options.Min)
-					SetSliderSize(newSize)  -- Atualiza o tamanho do Draggable
-					UpdateSliderValue()  -- Atualiza o valor exibido
+					SetSliderSize(newSize)
+					UpdateSliderValue()
 				end
 			end)
-			
+
 			-- Configuração inicial do slider
 			local initialSize = (Options.Default - Options.Min) / (Options.Max - Options.Min)
-			SetSliderSize(initialSize)  -- Ajusta o tamanho inicial do "Draggable"
-			UpdateSliderValue()  -- Atualiza o valor inicial
-			
-			Search:GetPropertyChangedSignal("Text"):Connect(function()
-				local searchTerm = Search.Text:lower()
-
-				if searchTerm == "" or string.lower(Options.Title):find(searchTerm) then
-					Tab:Activate()
-				else
-					Tab:Deactivate()
-				end
-			end)
+			SetSliderSize(initialSize)
+			UpdateSliderValue()
 			
 			return Slider
 		end
@@ -1720,7 +1725,7 @@ function Library:CreateWindow(Options)
 			local UICorner_27 = Instance.new("UICorner")
 			local R_3 = Instance.new("Frame")
 			local UICorner_28 = Instance.new("UICorner")
-			local Title_10 = Instance.new("TextLabel")
+			local Title_10 = Instance.new("TextButton")
 			local UIPadding_35 = Instance.new("UIPadding")
 			
 			Toggle_2.Name = "Toggle"
@@ -1788,6 +1793,7 @@ function Library:CreateWindow(Options)
 			Title_10.Position = UDim2.new(0, 0, 0.5, 0)
 			Title_10.Size = UDim2.new(1, -60, 0, 20)
 			Title_10.Font = Font1
+			Title_10.AutoButtonColor = false
 			Title_10.Text = Options.Title
 			Title_10.TextColor3 = Theme.Text
 			Title_10.TextSize = 12.000
@@ -1795,6 +1801,9 @@ function Library:CreateWindow(Options)
 
 			UIPadding_35.Parent = Title_10
 			UIPadding_35.PaddingLeft = UDim.new(0, 3)
+			
+			Toggle_2:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
+			UpdateCanvasSize()
 			
 			Options.Callback(Options.Default)
 			
@@ -1808,23 +1817,19 @@ function Library:CreateWindow(Options)
 				R_3.BackgroundColor3 = Theme.TogglesInactivelder
 			end
 			
-			Title_10.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-				
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					ToggleActive = not ToggleActive
-					Options.Callback(ToggleActive)
-					if ToggleActive == true then
-						R_3:TweenPosition(UDim2.new(0.511, 2,0.5, 0), Back, Out, Time2, true)
-						wait(0.3)
-						Holder_2.BackgroundColor3 = Theme.TogglesInactivelder
-						R_3.BackgroundColor3 = Theme.TogglesActiveHolder
-					else
-						R_3:TweenPosition(UDim2.new(-0.064, 2, 0.5, 0), Back, Out, Time1, true)
-						wait(0.2)
-						Holder_2.BackgroundColor3 = Theme.TogglesActiveHolder
-						R_3.BackgroundColor3 = Theme.TogglesInactivelder
-					end
+			Title_10.MouseButton1Click:Connect(function()
+				ToggleActive = not ToggleActive
+				Options.Callback(ToggleActive)
+				if ToggleActive == true then
+					R_3:TweenPosition(UDim2.new(0.511, 2,0.5, 0), Back, Out, Time2, true)
+					wait(0.3)
+					Holder_2.BackgroundColor3 = Theme.TogglesInactivelder
+					R_3.BackgroundColor3 = Theme.TogglesActiveHolder
+				else
+					R_3:TweenPosition(UDim2.new(-0.064, 2, 0.5, 0), Back, Out, Time1, true)
+					wait(0.2)
+					Holder_2.BackgroundColor3 = Theme.TogglesActiveHolder
+					R_3.BackgroundColor3 = Theme.TogglesInactivelder
 				end
 			end)
 			
@@ -1875,16 +1880,18 @@ function Library:CreateWindow(Options)
 			local on = false
 
 			local Dropdown = Instance.new("Frame")
-			local UICorner_16 = Instance.new("UICorner")
+			local UICorner = Instance.new("UICorner")
 			local Contenholder = Instance.new("Frame")
 			local ScrollFrame = Instance.new("ScrollingFrame")
-			local UICorner_17 = Instance.new("UICorner")
-			local UIPadding_22 = Instance.new("UIPadding")
-			local UICorner_18 = Instance.new("UICorner")
-			local UIPadding_23 = Instance.new("UIPadding")
-			local Title_6 = Instance.new("TextLabel")
-			local Icon_6 = Instance.new("ImageLabel")
-			local UIPadding_24 = Instance.new("UIPadding")
+			local Option = Instance.new("TextLabel")
+			local UICorner_2 = Instance.new("UICorner")
+			local UIPadding = Instance.new("UIPadding")
+			local UIListLayout = Instance.new("UIListLayout")
+			local UICorner_5 = Instance.new("UICorner")
+			local UIPadding_2 = Instance.new("UIPadding")
+			local Title = Instance.new("TextButton")
+			local UIPadding_3 = Instance.new("UIPadding")
+			local Icon = Instance.new("ImageLabel")
 
 			Dropdown.Name = "Dropdown"
 			Dropdown.Parent = NormalTab
@@ -1896,8 +1903,8 @@ function Library:CreateWindow(Options)
 			Dropdown.Selectable = true
 			Dropdown.Size = UDim2.new(1, 0, 0, 27)
 
-			UICorner_16.CornerRadius = UDim.new(0, 5)
-			UICorner_16.Parent = Dropdown
+			UICorner.CornerRadius = UDim.new(0, 5)
+			UICorner.Parent = Dropdown
 
 			local s =Instance.new("UIStroke")
 			s.Parent = Dropdown
@@ -1915,6 +1922,12 @@ function Library:CreateWindow(Options)
 			Contenholder.Size = UDim2.new(1, 0, 1, -22)
 			Contenholder.Visible = false
 
+			local s =Instance.new("UIStroke")
+			s.Parent = Contenholder
+			s.Color  = Theme.UiStroke
+			s.Thickness = 0.8
+			s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
 			ScrollFrame.Name = "ScrollFrame"
 			ScrollFrame.Parent = Contenholder
 			ScrollFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1925,110 +1938,112 @@ function Library:CreateWindow(Options)
 			ScrollFrame.Size = UDim2.new(1, 0, 1, 0)
 			ScrollFrame.ScrollBarThickness = 0
 
-			UIPadding_22.Parent = ScrollFrame
-			UIPadding_22.PaddingBottom = UDim.new(0, 7)
-			UIPadding_22.PaddingLeft = UDim.new(0, 7)
-			UIPadding_22.PaddingRight = UDim.new(0, 7)
-			UIPadding_22.PaddingTop = UDim.new(0, 7)
+			UIPadding.Parent = ScrollFrame
+			UIPadding.PaddingBottom = UDim.new(0, 7)
+			UIPadding.PaddingLeft = UDim.new(0, 7)
+			UIPadding.PaddingRight = UDim.new(0, 7)
+			UIPadding.PaddingTop = UDim.new(0, 7)
 
-			UICorner_18.CornerRadius = UDim.new(0, 5)
-			UICorner_18.Parent = Contenholder
+			UIListLayout.Parent = ScrollFrame
+			UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIListLayout.Padding = UDim.new(0, 5)
 
-			local s =Instance.new("UIStroke")
-			s.Parent = Contenholder
-			s.Color  = Theme.UiStroke
-			s.Thickness = 0.8
-			s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			UICorner_5.CornerRadius = UDim.new(0, 5)
+			UICorner_5.Parent = Contenholder
 
-			UIPadding_23.Parent = Dropdown
-			UIPadding_23.PaddingBottom = UDim.new(0, 7)
-			UIPadding_23.PaddingLeft = UDim.new(0, 7)
-			UIPadding_23.PaddingRight = UDim.new(0, 7)
-			UIPadding_23.PaddingTop = UDim.new(0, 7)
+			UIPadding_2.Parent = Dropdown
+			UIPadding_2.PaddingBottom = UDim.new(0, 7)
+			UIPadding_2.PaddingLeft = UDim.new(0, 7)
+			UIPadding_2.PaddingRight = UDim.new(0, 7)
+			UIPadding_2.PaddingTop = UDim.new(0, 7)
 
-			Title_6.Name = "Title"
-			Title_6.Parent = Dropdown
-			Title_6.AnchorPoint = Vector2.new(0, 0.5)
-			Title_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Title_6.BackgroundTransparency = 1.000
-			Title_6.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Title_6.BorderSizePixel = 0
-			Title_6.Position = UDim2.new(0, 0, 0, 7)
-			Title_6.Size = UDim2.new(1, 0, 0, 20)
-			Title_6.Font = Font1
-			Title_6.Text = Options.Title
-			Title_6.TextColor3 = Theme.Text
-			Title_6.TextSize = 12.000
-			Title_6.TextXAlignment = Enum.TextXAlignment.Left
+			Title.Name = "Title"
+			Title.Parent = Dropdown
+			Title.Active = false
+			Title.AnchorPoint = Vector2.new(0, 0.5)
+			Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Title.BackgroundTransparency = 1.000
+			Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Title.BorderSizePixel = 0
+			Title.Position = UDim2.new(0, 0, 0, 7)
+			Title.Selectable = false
+			Title.Size = UDim2.new(1, 0, 0, 20)
+			Title.Font = Font1
+			Title.AutoButtonColor = false
+			Title.Text = "Dropdown"
+			Title.TextColor3 = Theme.Text
+			Title.TextSize = 10.000
+			Title.TextXAlignment = Enum.TextXAlignment.Left
 
-			Icon_6.Name = "Icon"
-			Icon_6.Parent = Title_6
-			Icon_6.AnchorPoint = Vector2.new(1, 0.5)
-			Icon_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Icon_6.BackgroundTransparency = 1.000
-			Icon_6.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			Icon_6.BorderSizePixel = 0
-			Icon_6.Position = UDim2.new(1, 0, 0.5, 0)
-			Icon_6.Size = UDim2.new(0, 18, 0, 18)
-			Icon_6.Image = "http://www.roblox.com/asset/?id=86625499622821"
-			Icon_6.ImageColor3 = Theme.Image
+			UIPadding_3.Parent = Title
+			UIPadding_3.PaddingLeft = UDim.new(0, 3)
 
-			local L = Instance.new("UIListLayout")
-			L.Parent = ScrollFrame
-			L.HorizontalAlignment = Enum.HorizontalAlignment.Center
-			L.SortOrder = Enum.SortOrder.LayoutOrder
-			L.Padding = UDim.new(0, 5)
-
-			UIPadding_24.Parent = Title_6
-			UIPadding_24.PaddingLeft = UDim.new(0, 3)
+			Icon.Name = "Icon"
+			Icon.Parent = Dropdown
+			Icon.AnchorPoint = Vector2.new(1, 0.5)
+			Icon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Icon.BackgroundTransparency = 1.000
+			Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Icon.BorderSizePixel = 0
+			Icon.Position = UDim2.new(1, 0, 0, 7)
+			Icon.Size = UDim2.new(0, 18, 0, 18)
+			Icon.Image = "http://www.roblox.com/asset/?id=86625499622821"
+			Icon.ImageColor3 = Theme.Image
 
 			local function upd()
-				local contentSize = L.AbsoluteContentSize
+				local contentSize = UIListLayout.AbsoluteContentSize
 				ScrollFrame.CanvasSize = UDim2.new(0, contentSize.X, 0, contentSize.Y + 10)
+			end
+			
+			if uis.TouchEnabled then
+				ScrollFrame.ScrollBarThickness = 5
+			else
+				ScrollFrame.ScrollBarThickness = 0
 			end
 
 			local function addOptions()
 				for _, value in ipairs(Options.Values) do
-					local Option = Instance.new("TextLabel")
+					local Option = Instance.new("TextButton")
 					Option.Name = value
 					Option.Parent = ScrollFrame
-					Option.BackgroundColor3 = Theme.OptionsDrop
-					Option.BackgroundTransparency = 0
+					Option.BackgroundColor3 = Theme.Options
 					Option.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					Option.BorderSizePixel = 0
-					Option.Size = UDim2.new(1, 0, 0, 16)
+					Option.Size = UDim2.new(1, 0, 0, 20)
 					Option.Font = Font1
 					Option.Text = value
+					Option.AutoButtonColor = false
 					Option.TextColor3 = Theme.Text
-					Option.TextSize = 12.000
+					Option.TextSize = 11.000
+					Option.TextWrapped = true
 
-					local UICorner_Option = Instance.new("UICorner")
-					UICorner_Option.CornerRadius = UDim.new(0, 5)
-					UICorner_Option.Parent = Option
+					UICorner_2.CornerRadius = UDim.new(0, 5)
+					UICorner_2.Parent = Option
+
+					local s =Instance.new("UIStroke")
+					s.Parent = Option
+					s.Color  = Theme.UiStroke
+					s.Thickness = 0.8
+					s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 					Option.MouseEnter:Connect(function()
-						Option.BackgroundColor3 = Theme.Options
-						Option.TextColor3 = Theme.Text
-					end)
-
-					Option.MouseLeave:Connect(function()
 						Option.BackgroundColor3 = Theme.OptionsDrop
 						Option.TextColor3 = Theme.Text
 					end)
 
-					Option.InputBegan:Connect(function(input, gameProcessed)
-						if gameProcessed then return end
-						if input.UserInputType == Enum.UserInputType.MouseButton1 then
-							-- Ao clicar na opção, chama o callback
-							Options.Callback(value)
-							-- Atualiza o título do dropdown
-							Title_6.Text = value
-							-- Fecha as opções
-							on = false
-							Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
-							wait(Time1)
-							Contenholder.Visible = on
-						end
+					Option.MouseLeave:Connect(function()
+						Option.BackgroundColor3 = Theme.Options
+						Option.TextColor3 = Theme.Text
+					end)
+
+					Option.MouseButton1Click:Connect(function()
+						Options.Callback(value)
+						Title.Text = value
+						on = false
+						Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
+						wait(Time1)
+						Contenholder.Visible = on
 					end)
 					Option:GetPropertyChangedSignal("AbsoluteSize"):Connect(upd)
 					upd()
@@ -2040,20 +2055,17 @@ function Library:CreateWindow(Options)
 			Dropdown:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
 			UpdateCanvasSize()
 
-			Title_6.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					on = not on
-					Dropdown:TweenSize(UDim2.new(1, 0, 0, 96), Back, Out, Time2, true)
-					Contenholder.Visible = true
-					if on == false then
-						Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
-						wait(Time1)
-						Contenholder.Visible = on
-					end
+			Title.MouseButton1Click:Connect(function()
+				on = not on
+				Dropdown:TweenSize(UDim2.new(1, 0, 0, 120), Back, Out, Time2, true)
+				Contenholder.Visible = true
+				if on == false then
+					Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
+					wait(Time1)
+					Contenholder.Visible = on
 				end
 			end)
+
 
 			function Drop:SetEditDropdown(Op)
 				Op.Title = Op.Title or Options.Title
@@ -2061,7 +2073,7 @@ function Library:CreateWindow(Options)
 				Op.Default = Op.Default or Options.Default
 
 				if Op.Title then
-					Title_6.Text = Op.Title
+					Title.Text = Op.Title
 					Options.Callback(Op.Default or Options.Default)
 				end
 				if Op.Values then
@@ -2073,14 +2085,8 @@ function Library:CreateWindow(Options)
 							child:Destroy()
 						end
 					end
-
-					-- Adiciona as novas opções
 					addOptions()
 				end
-				if Op.Default then
-					Title_6.Text = Op.Default
-				end
-
 			end
 
 			return Drop
@@ -2103,10 +2109,10 @@ function Library:CreateWindow(Options)
 			local UIPadding_2 = Instance.new("UIPadding")
 			local HolderButtons = Instance.new("Frame")
 			local UICorner_2 = Instance.new("UICorner")
-			local Down = Instance.new("ImageLabel")
+			local Down = Instance.new("ImageButton")
 			local UIListLayout = Instance.new("UIListLayout")
 			local Line = Instance.new("Frame")
-			local Up = Instance.new("ImageLabel")
+			local Up = Instance.new("ImageButton")
 
 			-- Configurações do Frame Input
 			Input.Name = "Input"
@@ -2212,27 +2218,19 @@ function Library:CreateWindow(Options)
 			Options.Callback(Options.Default)
 
 			-- Ação para o botão Up
-			Up.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					lastNumber = (tonumber(Title.Text) or lastNumber) + SomaNumber
-					Title.Text = tostring(lastNumber)
-					Title.PlaceholderText = Options.Title .. " - " .. Title.Text
-					Options.Callback(lastNumber)
-				end
+			Up.MouseButton1Click:Connect(function()	
+				lastNumber = (tonumber(Title.Text) or lastNumber) + SomaNumber
+				Title.Text = tostring(lastNumber)
+				Title.PlaceholderText = Options.Title .. " - " .. Title.Text
+				Options.Callback(lastNumber)
 			end)
 
 			-- Ação para o botão Down
-			Down.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					lastNumber = (tonumber(Title.Text) or lastNumber) - SomaNumber
-					Title.Text = tostring(lastNumber)
-					Title.PlaceholderText = Options.Title .. " - " .. Title.Text
-					Options.Callback(lastNumber)
-				end
+			Down.MouseButton1Click:Connect(function()
+				lastNumber = (tonumber(Title.Text) or lastNumber) - SomaNumber
+				Title.Text = tostring(lastNumber)
+				Title.PlaceholderText = Options.Title .. " - " .. Title.Text
+				Options.Callback(lastNumber)
 			end)
 
 			-- Ação para pressionar Enter
@@ -2406,6 +2404,126 @@ function Library:CreateWindow(Options)
 			return KeyBind
 		end
 		
+		function Tab:AddEditText(Options)
+			Options.Title = Options.Title or "EditText"
+			Options.Default = Options.Default or "AKAIDO"
+			Options.Callback = Options.Callback or function() end
+
+			local EditText = {}
+
+			local Keybind = Instance.new("Frame")
+			local UIPadding = Instance.new("UIPadding")
+			local Title = Instance.new("TextLabel")
+			local UIPadding_2 = Instance.new("UIPadding")
+			local Input = Instance.new("Frame")
+			local UICorner = Instance.new("UICorner")
+			local InputKey = Instance.new("TextBox")
+			local UICorner_2 = Instance.new("UICorner")
+
+			Keybind.Name = "Keybind"
+			Keybind.Parent = NormalTab
+			Keybind.Active = true
+			Keybind.BackgroundColor3 = Theme.Options
+			Keybind.BackgroundTransparency = 0.400
+			Keybind.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Keybind.BorderSizePixel = 0
+			Keybind.Selectable = true
+			Keybind.Size = UDim2.new(1, 0, 0, 27)
+
+			UIPadding.Parent = Keybind
+			UIPadding.PaddingLeft = UDim.new(0, 7)
+			UIPadding.PaddingRight = UDim.new(0, 7)
+
+			local s = Instance.new("UIStroke")
+			s.Parent = Keybind
+			s.Color = Theme.UiStroke
+			s.Thickness = 0.8
+			s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+			Title.Name = "Title"
+			Title.Parent = Keybind
+			Title.AnchorPoint = Vector2.new(0, 0.5)
+			Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Title.BackgroundTransparency = 1.000
+			Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Title.BorderSizePixel = 0
+			Title.Position = UDim2.new(0, 0, 0.5, 0)
+			Title.Size = UDim2.new(1, -60, 0, 20)
+			Title.Font = Font1
+			Title.Text = Options.Title
+			Title.TextColor3 = Theme.Text
+			Title.TextSize = 11.000
+			Title.TextXAlignment = Enum.TextXAlignment.Left
+
+			UIPadding_2.Parent = Title
+			UIPadding_2.PaddingLeft = UDim.new(0, 3)
+
+			Input.Name = "Input"
+			Input.Parent = Keybind
+			Input.AnchorPoint = Vector2.new(1, 0.5)
+			Input.BackgroundColor3 = Theme.Options
+			Input.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			Input.BorderSizePixel = 0
+			Input.Position = UDim2.new(1, 0, 0.5, 0)
+			Input.Size = UDim2.new(0, 40, 0, 20)
+
+			UICorner.CornerRadius = UDim.new(0, 5)
+			UICorner.Parent = Input
+
+			local s = Instance.new("UIStroke")
+			s.Parent = Input
+			s.Color = Theme.UiStroke
+			s.Thickness = 0.8
+			s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+			InputKey.Name = "InputKey"
+			InputKey.Parent = Input
+			InputKey.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			InputKey.BackgroundTransparency = 1.000
+			InputKey.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			InputKey.BorderSizePixel = 0
+			InputKey.Size = UDim2.new(1, 0, 1, 0)
+			InputKey.Font = Font1
+			InputKey.PlaceholderText = "[...]"
+			InputKey.Text = Options.Default
+			InputKey.PlaceholderColor3 = Theme.TextPlaceHolder
+			InputKey.TextColor3 = Theme.Text
+			InputKey.TextSize = 11.000
+			InputKey.TextWrapped = true
+
+			UICorner_2.CornerRadius = UDim.new(0, 5)
+			UICorner_2.Parent = Keybind
+
+			Keybind:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
+			UpdateCanvasSize()
+
+			local lastValue = InputKey.Text -- Armazena o último valor válido
+
+			Options.Callback(Options.Default)
+
+			InputKey.FocusLost:Connect(function(enterPressed)
+				if enterPressed then
+					if InputKey.Text == "" then
+						InputKey.Text = lastValue -- Restaura o último valor válido
+						return
+					end
+					Options.Callback(InputKey.Text)
+				end
+			end)
+
+			InputKey.MouseEnter:Connect(function()
+				Input:TweenSize(UDim2.new(0, 70, 0, 20), Back, Out, Time2, true)
+				InputKey.TextSize = 14.000
+			end)
+
+			InputKey.MouseLeave:Connect(function()
+				Input:TweenSize(UDim2.new(0, 40, 0, 20), Back, Out, Time2, true)
+				InputKey.TextSize = 11.000
+			end)
+
+			return EditText
+		end
+		
 		return Tab
 	end
 	
@@ -2418,7 +2536,7 @@ function Library:CreateWindow(Options)
 			Active = false
 		}
 
-		local Inactive = Instance.new("TextLabel")
+		local Inactive = Instance.new("TextButton")
 		local UICorner_8 = Instance.new("UICorner")
 		local UIPadding_10 = Instance.new("UIPadding")
 		local Icon_3 = Instance.new("ImageLabel")
@@ -2434,6 +2552,7 @@ function Library:CreateWindow(Options)
 		Inactive.BorderSizePixel = 0
 		Inactive.Size = UDim2.new(1, 0, 0, 25)
 		Inactive.Font = Font1
+		Inactive.AutoButtonColor = false
 		Inactive.Text = Options.Title
 		Inactive.TextColor3 = Theme.Text
 		Inactive.TextSize = 12.000
@@ -2508,6 +2627,12 @@ function Library:CreateWindow(Options)
 		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout.Padding = UDim.new(0, 7)
 		
+		if uis.TouchEnabled then
+			PageHolder.ScrollBarThickness = 5
+		else
+			PageHolder.ScrollBarThickness = 0
+		end
+		
 		-- Update canvas size function
 		local function UpdateCanvasSize()
 			local contentSize = UIListLayout.AbsoluteContentSize
@@ -2532,14 +2657,9 @@ function Library:CreateWindow(Options)
 			end
 		end)
 
-		-- Detectar clique com InputBegan
-		Inactive.InputBegan:Connect(function(input, gpe)
-			if gpe then return end
-
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				if TAB.Hover then
-					TAB:Activate()
-				end
+		Inactive.MouseButton1Click:Connect(function()
+			if TAB.Hover then
+				TAB:Activate()
 			end
 		end)
 
@@ -2598,7 +2718,7 @@ function Library:CreateWindow(Options)
 			local UIGradient = Instance.new("UIGradient")
 			local UICorner = Instance.new("UICorner")
 			local UICorner_2 = Instance.new("UICorner")
-			local Title = Instance.new("TextLabel")
+			local Title = Instance.new("TextButton")
 			local UIPadding = Instance.new("UIPadding")
 			local Close = Instance.new("ImageLabel")
 			local Scroll = Instance.new("ScrollingFrame")
@@ -2632,6 +2752,7 @@ function Library:CreateWindow(Options)
 			Title.BorderSizePixel = 0
 			Title.Size = UDim2.new(1, 0, 0, 27)
 			Title.Font = Font2
+			Title.AutoButtonColor = false
 			Title.Text = Options.Title
 			Title.TextColor3 = Theme.Text
 			Title.TextSize = 12.000
@@ -2677,6 +2798,11 @@ function Library:CreateWindow(Options)
 			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 			UIListLayout.Padding = UDim.new(0, 5)
 			
+			if uis.TouchEnabled then
+				Scroll.ScrollBarThickness = 5
+			else
+				Scroll.ScrollBarThickness = 0
+			end
 			
 			local function up()
 				local contentSize = UIListLayout.AbsoluteContentSize
@@ -2686,27 +2812,15 @@ function Library:CreateWindow(Options)
 			SectionPage:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
 			UpdateCanvasSize()
 			
-			Title.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-				
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					OpenPage = not OpenPage
-					SectionPage:TweenSize(UDim2.new(0, 152, 0, Options.Size), Back, Out, Time2, true)
-					Close.Image = "rbxassetid://7734000129"
-					UpdateCanvasSize()
-					Scroll.Visible = true
-					if OpenPage == false then
-						Close.Image = "rbxassetid://7734042071"
-						SectionPage:TweenSize(UDim2.new(0, 152, 0, 27), Back, Out, Time2, true)
-						UpdateCanvasSize()
-					end
-				end
-			end)
-			
-			Icon_4.InputBegan:Connect(function(input, gpe)
-				if gpe then return end
-
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			Title.MouseButton1Click:Connect(function()
+				OpenPage = not OpenPage
+				SectionPage:TweenSize(UDim2.new(0, 152, 0, Options.Size), Back, Out, Time2, true)
+				Close.Image = "rbxassetid://7734000129"
+				UpdateCanvasSize()
+				Scroll.Visible = true
+				if OpenPage == false then
+					Close.Image = "rbxassetid://7734042071"
+					SectionPage:TweenSize(UDim2.new(0, 152, 0, 27), Back, Out, Time2, true)
 					UpdateCanvasSize()
 				end
 			end)
@@ -2720,7 +2834,7 @@ function Library:CreateWindow(Options)
 				local Button_3 = Instance.new("Frame")
 				local UICorner_22 = Instance.new("UICorner")
 				local UIPadding_28 = Instance.new("UIPadding")
-				local Title_8 = Instance.new("TextLabel")
+				local Title_8 = Instance.new("TextButton")
 				local UIPadding_29 = Instance.new("UIPadding")
 				local Icon_8 = Instance.new("ImageLabel")
 
@@ -2756,6 +2870,7 @@ function Library:CreateWindow(Options)
 				Title_8.BorderSizePixel = 0
 				Title_8.Position = UDim2.new(0, 0, 0.5, 0)
 				Title_8.Size = UDim2.new(1, 0, 0, 20)
+				Title_8.AutoButtonColor = false
 				Title_8.Font = Font1
 				Title_8.Text = Options.Title
 				Title_8.TextColor3 = Theme.Text
@@ -2777,25 +2892,11 @@ function Library:CreateWindow(Options)
 				Icon_8.Image = "rbxassetid://3944703587"
 				Icon_8.ImageColor3 = Theme.Image
 
-				Button_3:GetPropertyChangedSignal("AbsoluteSize"):Connect(up)
-				up()
+				Button_3:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateCanvasSize)
+				UpdateCanvasSize()
 
-				Title_8.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						Options.Callback()
-					end
-				end)
-
-				Search:GetPropertyChangedSignal("Text"):Connect(function()
-					local searchTerm = Search.Text:lower()
-
-					if searchTerm == "" or string.lower(Options.Title):find(searchTerm) then
-						TAB:Activate()
-					else
-						TAB:Deactivate()
-					end
+				Title_8.MouseButton1Click:Connect(function()
+					Options.Callback()
 				end)
 
 				return Button
@@ -2816,7 +2917,7 @@ function Library:CreateWindow(Options)
 				local UICorner_27 = Instance.new("UICorner")
 				local R_3 = Instance.new("Frame")
 				local UICorner_28 = Instance.new("UICorner")
-				local Title_10 = Instance.new("TextLabel")
+				local Title_10 = Instance.new("TextButton")
 				local UIPadding_35 = Instance.new("UIPadding")
 
 				Toggle_2.Name = "Toggle"
@@ -2884,6 +2985,7 @@ function Library:CreateWindow(Options)
 				Title_10.Position = UDim2.new(0, 0, 0.5, 0)
 				Title_10.Size = UDim2.new(1, -60, 0, 20)
 				Title_10.Font = Font1
+				Title_10.AutoButtonColor = false
 				Title_10.Text = Options.Title
 				Title_10.TextColor3 = Theme.Text
 				Title_10.TextSize = 12.000
@@ -2891,13 +2993,13 @@ function Library:CreateWindow(Options)
 
 				UIPadding_35.Parent = Title_10
 				UIPadding_35.PaddingLeft = UDim.new(0, 3)
-
-				Options.Callback(Options.Default)
 				
 				Toggle_2:GetPropertyChangedSignal("AbsoluteSize"):Connect(up)
 				up()
 
-				if Options.Default then
+				Options.Callback(Options.Default)
+
+				if Options.Default == true then
 					R_3.Position = UDim2.new(0.511, 2,0.5, 0)
 					Holder_2.BackgroundColor3 = Theme.TogglesInactivelder
 					R_3.BackgroundColor3 = Theme.TogglesActiveHolder
@@ -2907,40 +3009,26 @@ function Library:CreateWindow(Options)
 					R_3.BackgroundColor3 = Theme.TogglesInactivelder
 				end
 
-				Title_10.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						ToggleActive = not ToggleActive
-						Options.Callback(ToggleActive)
-						if ToggleActive == true then
-							R_3:TweenPosition(UDim2.new(0.511, 2,0.5, 0), Back, Out, Time1, true)
-							wait(0.3)
-							Holder_2.BackgroundColor3 = Theme.TogglesInactivelder
-							R_3.BackgroundColor3 = Theme.TogglesActiveHolder
-						else
-							R_3:TweenPosition(UDim2.new(-0.064, 2, 0.5, 0), Back, Out, Time1, true)
-							wait(0.2)
-							Holder_2.BackgroundColor3 = Theme.TogglesActiveHolder
-							R_3.BackgroundColor3 = Theme.TogglesInactivelder
-						end
-					end
-				end)
-
-				Search:GetPropertyChangedSignal("Text"):Connect(function()
-					local searchTerm = Search.Text:lower()
-
-					if searchTerm == "" or string.lower(Options.Title):find(searchTerm) then
-						TAB:Activate()
+				Title_10.MouseButton1Click:Connect(function()
+					ToggleActive = not ToggleActive
+					Options.Callback(ToggleActive)
+					if ToggleActive == true then
+						R_3:TweenPosition(UDim2.new(0.511, 2,0.5, 0), Back, Out, Time2, true)
+						wait(0.3)
+						Holder_2.BackgroundColor3 = Theme.TogglesInactivelder
+						R_3.BackgroundColor3 = Theme.TogglesActiveHolder
 					else
-						TAB:Deactivate()
+						R_3:TweenPosition(UDim2.new(-0.064, 2, 0.5, 0), Back, Out, Time1, true)
+						wait(0.2)
+						Holder_2.BackgroundColor3 = Theme.TogglesActiveHolder
+						R_3.BackgroundColor3 = Theme.TogglesInactivelder
 					end
 				end)
-				
+
 				function Toggle:EditToggle(options)
 					options.Title = options.Title
 					options.Default = options.Default
-					
+
 					if options.Title then
 						Title_10.Text = options.Title
 					end
@@ -2949,7 +3037,7 @@ function Library:CreateWindow(Options)
 						Options.Callback(options.Default)
 						R_3:TweenPosition(UDim2.new(0.511, 2,0.5, 0), Back, Out, 0.5, true)
 						wait(0.3)
-						Holder_2.BackgroundColor3 = Theme.TogglesActiveHolder
+						Holder_2.BackgroundColor3 = Theme.TogglesInactivelder
 						R_3.BackgroundColor3 = Theme.TogglesActiveHolder
 					else
 						ToggleActive = options.Default
@@ -2981,7 +3069,7 @@ function Library:CreateWindow(Options)
 				local Value_2 = Instance.new("TextBox")
 				local UIPadding_31 = Instance.new("UIPadding")
 				local UIPadding_32 = Instance.new("UIPadding")
-				local BackSlider_2 = Instance.new("Frame")
+				local BackSlider_2 = Instance.new("TextButton")
 				local UICorner_24 = Instance.new("UICorner")
 				local Draggable_2 = Instance.new("Frame")
 				local UICorner_25 = Instance.new("UICorner")
@@ -3035,7 +3123,6 @@ function Library:CreateWindow(Options)
 				Value_2.Text = "50"
 				Value_2.PlaceholderText = ""
 				Value_2.TextColor3 = Theme.Text
-				Value_2.PlaceholderColor3 = Theme.TextPlaceHolder
 				Value_2.TextSize = 12.000
 				Value_2.TextXAlignment = Enum.TextXAlignment.Right
 
@@ -3049,10 +3136,12 @@ function Library:CreateWindow(Options)
 
 				BackSlider_2.Name = "BackSlider"
 				BackSlider_2.Parent = Slider_2
-				BackSlider_2.BackgroundColor3 = Theme.TogglesInactivelder
+				BackSlider_2.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 				BackSlider_2.BackgroundTransparency = 0.080
 				BackSlider_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
 				BackSlider_2.BorderSizePixel = 0
+				BackSlider_2.Text = ""
+				BackSlider_2.AutoButtonColor = false
 				BackSlider_2.Position = UDim2.new(0, 0, 0, 25)
 				BackSlider_2.Size = UDim2.new(1, 0, 0, 25)
 
@@ -3092,71 +3181,85 @@ function Library:CreateWindow(Options)
 				Slider_2:GetPropertyChangedSignal("AbsoluteSize"):Connect(up)
 				up()
 
-				local lastValue = nil  -- Armazena o último valor arredondado
-
 				-- Função para atualizar o valor do Slider
+				local lastValue = nil
+
 				local function UpdateSliderValue()
 					local sliderValue = math.clamp(Draggable_2.Size.X.Scale * (Options.Max - Options.Min) + Options.Min, Options.Min, Options.Max)
-					local roundedValue = math.floor(sliderValue)  -- Arredonda o valor
+					local roundedValue = math.floor(sliderValue)
 
 					-- Verifica se o valor arredondado mudou
 					if roundedValue ~= lastValue then
-						lastValue = roundedValue  -- Atualiza o último valor
-
-						Value_2.Text = roundedValue  -- Atualiza o texto com o valor arredondado
-						Options.Callback(roundedValue)  -- Chama o callback com o valor arredondado
+						lastValue = roundedValue
+						Value_2.Text = tostring(roundedValue)
+						Options.Callback(roundedValue)
 					end
 				end
 
-				-- Função para ajustar o tamanho do "Draggable" baseado em um novo tamanho
+				-- Função para ajustar o tamanho do "Draggable"
 				local function SetSliderSize(newSize)
-					local clampedSize = math.clamp(newSize, 0, 1)  -- Limitar o tamanho entre 0 e 1
+					local clampedSize = math.clamp(newSize, 0, 1)
 					Draggable_2.Size = UDim2.new(clampedSize, 0, 1, 0)
-					UpdateSliderValue()  -- Atualiza o valor do slider
+					UpdateSliderValue()
 				end
 
-				-- Eventos para interatividade do slider
+				-- Variáveis para controle de arrasto
 				local dragging = false
 				local startDragPosition = 0
 
-				BackSlider_2.InputBegan:Connect(function(input, gameProcessed)
-					if gameProcessed then return end
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						dragging = true
-						Main.Draggable = false
+				-- Função que lida com o início do arrasto (Clique ou Toque)
+				local function startDragging(input)
+					dragging = true
+					startDragPosition = (input.Position and input.Position.X) or input.Position.X -- Se input.Position estiver disponível (mouse), use, caso contrário, use input.Position.X (toque)
+				end
+
+				-- Função que lida com o movimento do arrasto
+				local function updateDragging(input)
+					if dragging then
+						local delta = input.Position.X - startDragPosition
+						local newSize = Draggable_2.Size.X.Scale + (delta / BackSlider_2.AbsoluteSize.X)
+						SetSliderSize(newSize)
 						startDragPosition = input.Position.X
 					end
-				end)
+				end
 
-				-- Atualiza o tamanho do "Draggable" enquanto arrasta
-				game:GetService("UserInputService").InputChanged:Connect(function(input)
-					if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-						local delta = input.Position.X - startDragPosition  -- Distância do movimento
-						local newSize = Draggable_2.Size.X.Scale + (delta / BackSlider_2.AbsoluteSize.X)  -- Calcula o novo tamanho
-						SetSliderSize(newSize)  -- Atualiza o tamanho do Draggable
-						startDragPosition = input.Position.X  -- Atualiza a posição inicial para o próximo cálculo
-					end
-				end)
-
-				-- Para de arrastar quando o botão do mouse é liberado
-				game:GetService("UserInputService").InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				-- Função que lida com o fim do arrasto
+				local function stopDragging(input)
+					if dragging then
 						dragging = false
-						Main.Draggable = true
+					end
+				end
+
+				-- Conexões para eventos de entrada (mouse e toque)
+				BackSlider_2.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+						startDragging(input)
 					end
 				end)
 
+				-- Atualiza a posição durante o arrasto (mouse ou toque)
+				game:GetService("UserInputService").InputChanged:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+						updateDragging(input)
+					end
+				end)
+
+				-- Finaliza o arrasto quando o botão do mouse ou o toque é liberado
+				game:GetService("UserInputService").InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+						stopDragging(input)
+					end
+				end)
+
+				-- Função que é chamada quando o valor do TextBox é alterado
 				Value_2.FocusLost:Connect(function(enterPressed)
 					if enterPressed then
-						-- Remove caracteres não numéricos e mantém apenas números
 						local newText = Value_2.Text:gsub("[^%d]", "")
 						local numberValue = tonumber(newText)
 
-						-- Se a entrada não for um número, defina como o mínimo
 						if not numberValue then
 							numberValue = Options.Min
 						else
-							-- Verifica os limites e ajusta o valor
 							if numberValue < Options.Min then
 								numberValue = Options.Min
 							elseif numberValue > Options.Max then
@@ -3164,30 +3267,18 @@ function Library:CreateWindow(Options)
 							end
 						end
 
-						-- Atualiza o texto do valor
 						Value_2.Text = tostring(numberValue)
 
-						-- Cálculo do tamanho do slider, garantindo que o valor esteja correto
 						local newSize = (numberValue - Options.Min) / (Options.Max - Options.Min)
-						SetSliderSize(newSize)  -- Atualiza o tamanho do Draggable
-						UpdateSliderValue()  -- Atualiza o valor exibido
+						SetSliderSize(newSize)
+						UpdateSliderValue()
 					end
 				end)
 
 				-- Configuração inicial do slider
 				local initialSize = (Options.Default - Options.Min) / (Options.Max - Options.Min)
-				SetSliderSize(initialSize)  -- Ajusta o tamanho inicial do "Draggable"
-				UpdateSliderValue()  -- Atualiza o valor inicial
-
-				Search:GetPropertyChangedSignal("Text"):Connect(function()
-					local searchTerm = Search.Text:lower()
-
-					if searchTerm == "" or string.lower(Options.Title):find(searchTerm) then
-						TAB:Activate()
-					else
-						TAB:Deactivate()
-					end
-				end)
+				SetSliderSize(initialSize)
+				UpdateSliderValue()
 
 				return Slider
 			end
@@ -3211,7 +3302,7 @@ function Library:CreateWindow(Options)
 				local UIListLayout = Instance.new("UIListLayout")
 				local UICorner_5 = Instance.new("UICorner")
 				local UIPadding_2 = Instance.new("UIPadding")
-				local Title = Instance.new("TextLabel")
+				local Title = Instance.new("TextButton")
 				local UIPadding_3 = Instance.new("UIPadding")
 				local Icon = Instance.new("ImageLabel")
 
@@ -3292,6 +3383,7 @@ function Library:CreateWindow(Options)
 				Title.Selectable = false
 				Title.Size = UDim2.new(1, 0, 0, 20)
 				Title.Font = Font1
+				Title.AutoButtonColor = false
 				Title.Text = "Dropdown"
 				Title.TextColor3 = Theme.Text
 				Title.TextSize = 10.000
@@ -3312,6 +3404,12 @@ function Library:CreateWindow(Options)
 				Icon.Image = "http://www.roblox.com/asset/?id=86625499622821"
 				Icon.ImageColor3 = Theme.Image
 				
+				if uis.TouchEnabled then
+					ScrollFrame.ScrollBarThickness = 5
+				else
+					ScrollFrame.ScrollBarThickness = 0
+				end
+				
 				local function upd()
 					local contentSize = UIListLayout.AbsoluteContentSize
 					ScrollFrame.CanvasSize = UDim2.new(0, contentSize.X, 0, contentSize.Y + 10)
@@ -3319,7 +3417,7 @@ function Library:CreateWindow(Options)
 
 				local function addOptions()
 					for _, value in ipairs(Options.Values) do
-						local Option = Instance.new("TextLabel")
+						local Option = Instance.new("TextButton")
 						Option.Name = value
 						Option.Parent = ScrollFrame
 						Option.BackgroundColor3 = Theme.Options
@@ -3328,6 +3426,7 @@ function Library:CreateWindow(Options)
 						Option.Size = UDim2.new(1, 0, 0, 20)
 						Option.Font = Font1
 						Option.Text = value
+						Option.AutoButtonColor = false
 						Option.TextColor3 = Theme.Text
 						Option.TextSize = 11.000
 						Option.TextWrapped = true
@@ -3351,19 +3450,13 @@ function Library:CreateWindow(Options)
 							Option.TextColor3 = Theme.Text
 						end)
 
-						Option.InputBegan:Connect(function(input, gameProcessed)
-							if gameProcessed then return end
-							if input.UserInputType == Enum.UserInputType.MouseButton1 then
-								-- Ao clicar na opção, chama o callback
-								Options.Callback(value)
-								-- Atualiza o título do dropdown
-								Title.Text = value
-								-- Fecha as opções
-								on = false
-								Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
-								wait(Time1)
-								Contenholder.Visible = on
-							end
+						Option.MouseButton1Click:Connect(function()
+							Options.Callback(value)
+							Title.Text = value
+							on = false
+							Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
+							wait(Time1)
+							Contenholder.Visible = on
 						end)
 						Option:GetPropertyChangedSignal("AbsoluteSize"):Connect(upd)
 						upd()
@@ -3375,18 +3468,14 @@ function Library:CreateWindow(Options)
 				Dropdown:GetPropertyChangedSignal("AbsoluteSize"):Connect(up)
 				up()
 
-				Title.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						on = not on
-						Dropdown:TweenSize(UDim2.new(1, 0, 0, 120), Back, Out, Time2, true)
-						Contenholder.Visible = true
-						if on == false then
-							Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
-							wait(Time1)
-							Contenholder.Visible = on
-						end
+				Title.MouseButton1Click:Connect(function()
+					on = not on
+					Dropdown:TweenSize(UDim2.new(1, 0, 0, 120), Back, Out, Time2, true)
+					Contenholder.Visible = true
+					if on == false then
+						Dropdown:TweenSize(UDim2.new(1, 0, 0, 27), Back, Out, Time2, true)
+						wait(Time1)
+						Contenholder.Visible = on
 					end
 				end)
 
@@ -3409,8 +3498,6 @@ function Library:CreateWindow(Options)
 								child:Destroy()
 							end
 						end
-
-						-- Adiciona as novas opções
 						addOptions()
 					end
 				end
@@ -3435,10 +3522,10 @@ function Library:CreateWindow(Options)
 				local UIPadding_2 = Instance.new("UIPadding")
 				local HolderButtons = Instance.new("Frame")
 				local UICorner_2 = Instance.new("UICorner")
-				local Down = Instance.new("ImageLabel")
+				local Down = Instance.new("ImageButton")
 				local UIListLayout = Instance.new("UIListLayout")
 				local Line = Instance.new("Frame")
-				local Up = Instance.new("ImageLabel")
+				local Up = Instance.new("ImageButton")
 
 				-- Configurações do Frame Input
 				Input.Name = "Input"
@@ -3544,27 +3631,19 @@ function Library:CreateWindow(Options)
 				Options.Callback(Options.Default)
 
 				-- Ação para o botão Up
-				Up.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						lastNumber = (tonumber(Title.Text) or lastNumber) + SomaNumber
-						Title.Text = tostring(lastNumber)
-						Title.PlaceholderText = Options.Title .. " - " .. Title.Text
-						Options.Callback(lastNumber)
-					end
+				Up.MouseButton1Click:Connect(function()
+					lastNumber = (tonumber(Title.Text) or lastNumber) + SomaNumber
+					Title.Text = tostring(lastNumber)
+					Title.PlaceholderText = Options.Title .. " - " .. Title.Text
+					Options.Callback(lastNumber)
 				end)
 
 				-- Ação para o botão Down
-				Down.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						lastNumber = (tonumber(Title.Text) or lastNumber) - SomaNumber
-						Title.Text = tostring(lastNumber)
-						Title.PlaceholderText = Options.Title .. " - " .. Title.Text
-						Options.Callback(lastNumber)
-					end
+				Down.MouseButton1Click:Connect(function()
+					lastNumber = (tonumber(Title.Text) or lastNumber) - SomaNumber
+					Title.Text = tostring(lastNumber)
+					Title.PlaceholderText = Options.Title .. " - " .. Title.Text
+					Options.Callback(lastNumber)
 				end)
 
 				-- Ação para pressionar Enter
@@ -3738,144 +3817,6 @@ function Library:CreateWindow(Options)
 				return KeyBind
 			end
 			
-			function Section:AddNoclipBt(Options)
-				Options.Title = Options.Title or "Preview Noclip"
-				Options.Default = Options.Default or false
-				
-				local Noclip = {}
-				local OnOrOff = Options.Default
-
-				local Fly = Instance.new("Frame")
-				local UICorner = Instance.new("UICorner")
-				local UIPadding = Instance.new("UIPadding")
-				local Title = Instance.new("TextLabel")
-				local UIPadding_2 = Instance.new("UIPadding")
-				local Icon = Instance.new("ImageLabel")
-				local View = Instance.new("Frame")
-				local UICorner_2 = Instance.new("UICorner")
-
-				Fly.Name = "Fly"
-				Fly.Parent = Scroll
-				Fly.Active = true
-				Fly.BackgroundColor3 = Theme.Options
-				Fly.BackgroundTransparency = 0.400
-				Fly.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Fly.BorderSizePixel = 0
-				Fly.Selectable = true
-				Fly.Size = UDim2.new(1, 0, 0, 27)
-
-				UICorner.CornerRadius = UDim.new(0, 5)
-				UICorner.Parent = Fly
-
-				UIPadding.Parent = Fly
-				UIPadding.PaddingLeft = UDim.new(0, 7)
-				UIPadding.PaddingRight = UDim.new(0, 7)
-
-				local s = Instance.new("UIStroke")
-				s.Parent = Fly
-				s.Color = Theme.UiStroke
-				s.Thickness = 0.8
-				s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-				Title.Name = "Title"
-				Title.Parent = Fly
-				Title.AnchorPoint = Vector2.new(0, 0.5)
-				Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				Title.BackgroundTransparency = 1.000
-				Title.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Title.BorderSizePixel = 0
-				Title.Position = UDim2.new(0, 0, 0.5, 0)
-				Title.Size = UDim2.new(1, 0, 0, 20)
-				Title.Font = Font1
-				Title.Text = Options.Title
-				Title.TextColor3 = Theme.Text
-				Title.TextSize = 12.000
-				Title.TextXAlignment = Enum.TextXAlignment.Left
-
-				UIPadding_2.Parent = Title
-				UIPadding_2.PaddingLeft = UDim.new(0, 8)
-
-				Icon.Name = "Icon"
-				Icon.Parent = Title
-				Icon.AnchorPoint = Vector2.new(1, 0.5)
-				Icon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				Icon.BackgroundTransparency = 1.000
-				Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				Icon.BorderSizePixel = 0
-				Icon.Position = UDim2.new(1, 0, 0.5, 0)
-				Icon.Size = UDim2.new(0, 18, 0, 18)
-				Icon.Image = "rbxassetid://7743871002"
-				Icon.ImageColor3 = Theme.Image
-
-				View.Name = "View"
-				View.Parent = Title
-				View.AnchorPoint = Vector2.new(0, 0.5)
-				View.BorderColor3 = Color3.fromRGB(0, 0, 0)
-				View.BorderSizePixel = 0
-				View.Position = UDim2.new(0, -11, 0.5, 0)
-				View.Size = UDim2.new(0, 7, 0, 19)
-
-				UICorner_2.CornerRadius = UDim.new(0, 5)
-				UICorner_2.Parent = View
-
-				Fly:GetPropertyChangedSignal("AbsoluteSize"):Connect(up)
-				up()
-				
-				local player = game.Players.LocalPlayer
-				local character = player.Character or player.CharacterAdded:Wait()
-				local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-				local noclipActive = false
-				local runService = game:GetService("RunService")
-
-				-- Função para ativar/desativar no-clip
-				local function toggleNoclip()
-					noclipActive = not noclipActive
-
-					for _, part in ipairs(character:GetDescendants()) do
-						if part:IsA("BasePart") then
-							part.CanCollide = not noclipActive
-						end
-					end
-				end
-
-				-- Conectar a entrada do usuário para alternar o no-clip
-				local UserInputService = game:GetService("UserInputService")
-				UserInputService.InputBegan:Connect(function(input, gameProcessed)
-					if not gameProcessed and input.KeyCode == Enum.KeyCode.N then
-						toggleNoclip()
-					end
-				end)
-
-				-- Manter o no-clip ativo enquanto o jogador estiver se movendo
-				runService.Stepped:Connect(function()
-					if noclipActive then
-						humanoidRootPart.Velocity = Vector3.new(0, 0, 0) -- Para evitar quedas
-					end
-				end)
-
-				if Options.Default == true then
-					View.BackgroundColor3 = Theme.TogglesActiveHolder
-				else
-					View.BackgroundColor3 = Theme.TogglesInactivelder
-				end
-
-				Title.InputBegan:Connect(function(input, gpe)
-					if gpe then return end
-
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						OnOrOff = not OnOrOff
-						if OnOrOff == false then
-							toggleNoclip()
-							View.BackgroundColor3 = Theme.TogglesInactivelder
-						else
-							View.BackgroundColor3 = Theme.TogglesActiveHolder
-						end
-					end
-				end)
-				
-				return Noclip
-			end
-			
 			function Section:AddEditText(Options)
 				Options.Title = Options.Title or "EditText"
 				Options.Default = Options.Default or "AKAIDO"
@@ -4014,113 +3955,28 @@ local Main = Library:CreateWindow({
 	WallPaper = true
 })
 
-local Page = Main:AddPage({
-	Title = "Page 1",
-})
-
-local SectionPage = Page:AddSection({
-	Title = "Aimbot",
-})
-
-local Visual = Page:AddSection({
-	Title = "Visuais",
-})
-
-local Player = Page:AddSection({
-	Title = "Local Player",
-})
-
-SectionPage:AddToggle({
-	Title = "Aimbot",
-	Default = false,
-	Callback = function(Value)
-		print(Value)
-	end
-})
-
-SectionPage:AddSlider({
-	Title = "Fov",
-	Placeholder = "Fov Cam",
-	Min = 10,
-	Max = 100,
-	Default = 15,
-	Callback = function(Value)
-		print(Value)
-	end
-})
-
-SectionPage:AddInput({
-	Title = "Change",
-	AddNumber = 5,
-	Default = 10,
-	Callback = function(Value)
-		print(Value)
-	end
-})
-
- Visual:AddDropdown({
-	Title = "Esp Types",
-	Values = {
-		"Light",
-		"Darker",
-		"Void",
-		"AKAIDO"
-	},
-	Default = "Type 6",
-	Callback = function(Value)
-		print(Value)
-		Library:CreateWindow({
-			Title = Value,
-			Theme = Value,
-			WallPaper = true
-		})
-	end
-})
-
-Visual:AddButton({
-	Title = "Exemple Button",
-	Callback = function()
-		print("TEst")
-		Library:EditWindow({
-			Theme = "Void"
-		})
-	end
-})
-
-Player:AddInput({
-	Title = "Fly Speed",
-	Default = 100,
-	AddNumber = 1,
-	Callback = function(Value)
-	end
-})
-
-Player:AddSlider({
-	Title = "Speed Fly",
-	Placeholder = "Speed",
-	Min = 0,
-	Max = 200,
-	Default = 10,
-	Callback = function(Value)
-
-	end
-})
-
-Player:AddKeyBind({
-	Title = "KeyBind",
-	Callback = function(Value)
-		print(Value)
-	end
-})
-
-Player:AddNoclipBt({})
-Player:AddEditText({})
+local Page = Main:AddPage({})
 
 local tab = Main:AddTab({})
 
-local l = Main:AddLine({})
+local tst = Page:AddSection({
+	Title = "Test Page",
+})
 
-tab:AddInput({})
+tst:AddToggle({})
+tst:AddButton({})
+tst:AddSlider({})
+tst:AddDropdown({})
+tst:AddKeyBind({})
+tst:AddInput({})
+tst:AddEditText({})
+
+tab:AddToggle({})
+tab:AddButton({})
+tab:AddSlider({})
+tab:AddDropdown({})
 tab:AddKeyBind({})
+tab:AddInput({})
+tab:AddEditText()
 
 return Library
