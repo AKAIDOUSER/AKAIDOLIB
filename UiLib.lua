@@ -881,7 +881,7 @@ function AKHUB:CreateWindow(Window)
 	Main.ClipsDescendants = false
 	Main.BorderSizePixel = 0
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-	Main.Size = UDim2.new(0, 472, 0, 320)
+	Main.Size = UDim2.new(0, 360, 0, 260)
 	Main.ZIndex = math.huge
 	
 	MenuOpen.MouseButton1Click:Connect(function()
